@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucky Playground</title>
+<style>
+  :root { --felt:#0f3d2e; --felt2:#0a2b20; --ivory:#f5efe0; --gold:#e3b341; --cherry:#c8372d; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:1.5rem; padding:1.5rem; background:radial-gradient(var(--felt),var(--felt2));
+    color:var(--ivory); font-family:Georgia,"Times New Roman",serif; }
+  h1 { margin:0; font-size:2.2rem; font-style:italic; color:var(--gold); }
+  .machine { background:var(--ivory); color:#1c1c1c; border:6px solid var(--gold); border-radius:18px;
+    padding:1.5rem; width:min(100%,380px); text-align:center; }
+  .reels { display:flex; gap:.6rem; justify-content:center; margin-bottom:1rem; }
+  .reel { flex:1; font-size:3.2rem; padding:.6rem 0; background:#fff; border:2px solid #1c1c1c; border-radius:8px; }
+  .info { display:flex; justify-content:space-between; font-size:1.1rem; margin-bottom:1rem; }
+  #msg { min-height:1.6em; margin:0 0 1rem; font-weight:bold; }
+  button { font:inherit; font-size:1.1rem; padding:.7rem 1.4rem; border:0; border-radius:8px;
+    background:var(--cherry); color:#fff; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
+  button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; }
+  footer { font-size:.9rem; opacity:.8; text-align:center; line-height:1.5; }
+</style>
+</head>
+<body>
+  <h1>Lucky Playground</h1>
+  <main class="machine">
+    <div class="reels" aria-live="polite">
+      <div class="reel" id="r0">🍒</div><div class="reel" id="r1">🍋</div><div class="reel" id="r2">🔔</div>
+    </div>
+    <div class="info"><span>Монеты: <b id="bal">100</b></span><span>Ставка: <b>10</b></span></div>
+    <p id="msg">Нажми «Крутить»</p>
+    <button id="spin">Крутить</button>
+  </main>
+ 
+<script>
+  const SYMBOLS = ["🍒", "🍋", "🔔", "⭐", "7️⃣"];
+  const PAYOUT = { "🍒": 5, "🍋": 8, "🔔": 12, "⭐": 20, "7️⃣": 50 };
+  const BET = 10;
+  let balance = 100;
+  const $ = id => document.getElementById(id);
+  const rand = () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+ 
+  function result(r) {
+    if (r[0] === r[1] && r[1] === r[2]) return BET * PAYOUT[r[0]];
+    if (r.filter(s => s === "🍒").length === 2) return BET;
+    return 0;
+  }
+ 
+  $("spin").addEventListener("click", () => {
+    if (balance < BET) { balance = 100; $("bal").textContent = balance; $("msg").textContent = "Монеты выданы заново"; return; }
+    balance -= BET;
+    $("spin").disabled = true;
+    $("msg").textContent = "…";
+    let ticks = 0;
+    const timer = setInterval(() => {
+      const r = [rand(), rand(), rand()];
+      r.forEach((s, i) => $("r" + i).textContent = s);
+      if (++ticks === 10) {
+        clearInterval(timer);
+        const win = result(r);
+        balance += win;
+        $("bal").textContent = balance;
+        $("msg").textContent = win ? "Выигрыш: +" + win : "Не повезло";
+        $("spin").textContent = balance < BET ? "Взять монеты" : "Крутить";
+        $("spin").disabled = false;
+      }
+    }, 80);
+  });
+</script>
+</body>
+</html>
+ 
